@@ -11,6 +11,7 @@ course.
 ## ToDo:
 - [ ] Get packet capture for `ettercap` arp spoofing attack
 - [ ] Get packet capture for `nmap` scans
+- [ ] Get packet capture for `responder` script
 - [ ] Get packet capture for _ms17-010_ exploit using `metasploit`
 - [x] Build sniffer in Python
 - [ ] Analyze sniffed packets to detect attacks based on patterns/signatures
