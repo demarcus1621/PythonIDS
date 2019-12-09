@@ -11,9 +11,17 @@ Returns dictionary of all levels' headers, and application data
 param: None
 returns: dict packet_information
 '''
-def get_packet():
+def get_packet(filt=None, func):
     packet_information = dict()
-    packet = sniff(store=1, count=1)[0]
+    if not filt and not func:
+        packet = sniff(store=1, count=1)[0]
+    elif filt and not func:
+        packet = sniff(store=1, count=1, filter=filt)
+    elif func and not filt:
+        packet = sniff(store=1, count=1, prn=func)
+    else:
+        packet = sniff(store=1, count=1, prn=func, filter=filt)
+     
     packet_information["frame_header"] = packet.getlayer(Ether)
     if packet.type == 2054:
         packet_information["arp_header"] = packet.getlayer(ARP)
