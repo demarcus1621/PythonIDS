@@ -15,11 +15,15 @@ class project_ids:
     # Port connections map to help detect nmap Syn scan
     __port_connections = dict()
     
+    # Check if SMB traffic to a host has happened in prep of Eternal Blue
+    __smb_traffic = False
+    
     def packet_checks(self, packet):
         if packet.haslayer(ARP):
             self.arp_poison_check(packet)
         elif packet.haslayer(TCP):
-            self.nmap_syn_check(packet)
+            self.nmap_check(packet)
+            self.eternal_blue_check(packet)
         
     '''
     Works under the assumption of gratuitous ARPs not being normal for the
@@ -42,11 +46,11 @@ class project_ids:
     
     '''
     Works under the assumption that connection port reuse is unlikely in
-    short periods of time. Nmap Syn scans without obfuscation tatics in
-    place will exhibit numerous Syn's from a singular port to all of the
+    short periods of time. Nmap scans without obfuscation tatics in
+    place will exhibit numerous pings from a singular port to all of the
     different scanned ports.
     '''
-    def  nmap_syn_check(self, packet):
+    def  nmap_check(self, packet):
         tcp_header = packet.getlayer(TCP)
         if tcp_header.sport in type(self).__port_connections:
             if tcp_header.dport not in type(self).__port_connections[tcp_header.sport]:
@@ -57,7 +61,28 @@ class project_ids:
             
         for connection in type(self).__port_connections:
             if len(type(self).__port_connections[connection]) > 5:
-                print("Possible NMAP Syn scan from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
+                print("Possible NMAP scan from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
     
+    '''
+    Listens for SMB traffic on the network, as that is the first stage
+    of Eternal Blue, then listens for a connection to the default
+    Meterpreter listening port. 
+    '''
+    def eternal_blue_check(self, packet):
+        tcp_header = packet.getlayer(TCP)
+        src_port = tcp_header.sport
+        dst_port = tcp_header.dport
+        if src_port or dst_port == 445:
+            type(self).__smb_traffic = True
+        
+        if type(self).__smb_traffic and type(self).__smb_traffic:
+            if dst_port == 4444:
+                print("Possible Eternal Blue exploit from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
+            '''
+            # TODO: Add functionality to detect when other ports are used with improper protocol
+            elif packet.haslayer(Raw) and dst_port == 8080:
+                raw_data = packet.getlayer(Raw).load
+            '''
+ 
 if __name__ == "__main__":
     sniff(prn=project_ids().packet_checks)
