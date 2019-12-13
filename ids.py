@@ -44,7 +44,7 @@ class project_ids:
         for reply in type(self).__arp_cache:
             if type(self).__gratuitous_arp_threshold <= type(self).__arp_cache[reply]:
                 print("Possible ARP poison from ", reply.split()[0])
-                type(self).__arp_cache = dict()
+                break
                 # return True
     
     '''
@@ -65,7 +65,7 @@ class project_ids:
         for connection in type(self).__port_connections:
             if len(type(self).__port_connections[connection]) > 5:
                 print("Possible NMAP scan from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
-                type(self).__port_connections = dict()
+                break
     
     '''
     Listens for SMB traffic on the network, as that is the first stage
