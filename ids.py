@@ -25,7 +25,7 @@ class project_ids:
             self.nmap_check(packet)
             self.eternal_blue_check(packet)
         elif packet.haslayer(UDP):
-            self.responer_check(packet)
+            self.responder_check(packet)
         
     '''
     Works under the assumption of gratuitous ARPs not being normal for the
@@ -93,12 +93,13 @@ class project_ids:
     Listens for LLMNR traffic on UDP port 5355. This will raise false
     positives if LLMNR traffic is allowed on the network.
     '''
-    def responer_check(self, packet):
+    def responder_check(self, packet):
         udp_header = packet.getlayer(UDP)
         src_port = udp_header.sport
         dst_port = udp_header.dport
         if src_port or dst_port == 5355:
-            print("Possible LLMNR poisoning from ", packet.getlayer(UDP).src, " on ", packet.getlayer(UDP).dst)
+            if packet.haslayer(IP):
+                print("Possible LLMNR poisoning from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
             
 if __name__ == "__main__":
     sniff(prn=project_ids().packet_checks)
