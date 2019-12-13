@@ -42,6 +42,7 @@ class project_ids:
         for reply in type(self).__arp_cache:
             if type(self).__gratuitous_arp_threshold <= type(self).__arp_cache[reply]:
                 print("Possible ARP poison from ", reply.split()[0])
+                type(self).__arp_cache = dict()
                 # return True
     
     '''
@@ -62,6 +63,7 @@ class project_ids:
         for connection in type(self).__port_connections:
             if len(type(self).__port_connections[connection]) > 5:
                 print("Possible NMAP scan from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
+                type(self).__port_connections = dict()
     
     '''
     Listens for SMB traffic on the network, as that is the first stage
@@ -78,11 +80,23 @@ class project_ids:
         if type(self).__smb_traffic and type(self).__smb_traffic:
             if dst_port == 4444:
                 print("Possible Eternal Blue exploit from ", packet.getlayer(IP).src, " on ", packet.getlayer(IP).dst)
+                type(self).__smb_traffic = False
             '''
             # TODO: Add functionality to detect when other ports are used with improper protocol
             elif packet.haslayer(Raw) and dst_port == 8080:
                 raw_data = packet.getlayer(Raw).load
             '''
- 
+            
+    '''
+    Listens for LLMNR traffic on UDP port 5355. This will raise false
+    positives if LLMNR traffic is allowed on the network.
+    '''
+    def responer_check(self, packet):
+        udp_header = packet.getlayer(UDP)
+        src_port = udp_header.sport
+        dst_port = udp_header.dport
+        if src_port or dst_port == 5355:
+            print("Possible LLMNR poisoning from ", packet.getlayer(UDP).src, " on ", packet.getlayer(UDP).dst)
+            
 if __name__ == "__main__":
     sniff(prn=project_ids().packet_checks)
