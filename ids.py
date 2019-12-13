@@ -24,6 +24,8 @@ class project_ids:
         elif packet.haslayer(TCP):
             self.nmap_check(packet)
             self.eternal_blue_check(packet)
+        elif packet.haslayer(UDP):
+            self.responer_check(packet)
         
     '''
     Works under the assumption of gratuitous ARPs not being normal for the
